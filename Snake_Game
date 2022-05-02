@@ -1,0 +1,273 @@
+#include<iostream>
+#include<conio.h>
+#include<stdlib.h>
+#include <time.h>
+#include<windows.h>
+
+using namespace std;
+
+bool gameOver;
+const int height = 25, width = 50;
+short X, Y, fruitX, fruitY,score;
+int tailX[100], tailY[100];
+int ntail;
+enum eDirection {STOP = 0, LEFT, RIGHT, UP, DOWN};
+eDirection dir;
+
+void gotoxy(int x, int y)
+{
+    COORD pos = {x, y};
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+}
+
+void color(int x)
+{
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), x);
+}
+void Setup()
+{
+    gameOver = false;
+    srand (time(NULL));
+    X = width / 2;
+    Y = height / 2;
+    fruitX = rand() % width;
+    fruitY = rand() % height;
+    score = 0;
+    ntail = 0;
+}
+
+void Draw()
+{
+    color(7);
+    for(int i = 0; i < height; i++)
+    {
+        if(i == 0 || i == height -1)
+        {
+            for(int j = 0; j < width; j++)
+            {
+                cout<< "#";
+            }
+            cout<<endl;
+        }
+        else
+        {
+            cout<< "#";
+            for(int s = 0; s < width - 2; s++)
+            {
+                if(i == Y && s == X)
+                {
+                    cout<<"O";
+                }
+                else if(i == fruitY && s == fruitX)
+                {
+                    cout<<"F";
+                }
+                else
+                {
+                    bool printTail = false;
+                    for(int j = 0; j < ntail; j++)
+                    {
+                        if(tailX[j] == s && tailY[j] == i)
+                        {
+                            cout<<"o";
+                            printTail = true;
+                        }
+                    }
+                    if(!printTail)
+                    {
+                        cout<< " ";
+                    }
+                }
+            }
+            cout<< "#";
+            cout<<endl;
+        }
+    }
+    cout<< "Score: "<<score;
+}
+
+void Input()
+{
+    if(_kbhit())
+    {
+        switch(_getch())
+        {
+        case 'a':
+        {
+            dir = LEFT;
+            break;
+        }
+        case 'd':
+        {
+            dir = RIGHT;
+            break;
+        }
+        case 'w':
+        {
+            dir = UP;
+            break;
+        }
+        case 's':
+        {
+            dir = DOWN;
+            break;
+        }
+        case 'x':
+        {
+            gameOver = true;
+            break;
+        }
+        }
+    }
+}
+
+void Logic()
+{
+    int prevX, prevY, prev2X, prev2Y;
+    prevX = tailX[0];
+    prevY = tailY[0];
+    tailX[0] = X;
+    tailY[0] = Y;
+
+    for(int i = 1; i < ntail; i++)
+    {
+        prev2X = tailX[i];
+        prev2Y = tailY[i];
+        tailX[i] = prevX;
+        tailY[i] = prevY;
+        prevX = prev2X;
+        prevY = prev2Y;
+    }
+
+    switch(dir)
+    {
+    case LEFT:
+    {
+        X--;
+        break;
+    }
+    case RIGHT:
+    {
+        X++;
+        break;
+    }
+    case UP:
+    {
+        Y--;
+        break;
+    }
+    case DOWN:
+    {
+        Y++;
+        break;
+    }
+    }
+    if(X == fruitX && Y == fruitY)
+    {
+        score = score + 10;
+        fruitX = rand() % width;
+        fruitY = rand() % height;
+        Beep(440, 400);
+        Beep(700, 500);
+        ntail++;
+    }
+
+    if(X > width || X < 0 || Y > height || Y < 0)
+    {
+        gameOver = true;
+    }
+
+    for(int i = 0; i < ntail; i++)
+    {
+        if(X == tailX[i] && Y == tailY[i])
+        {
+            gameOver = true;
+        }
+    }
+}
+
+void Gameover()
+{
+    if(gameOver)
+    {
+        system("cls");
+        Beep(440, 300);
+        Beep(700, 300);
+        Beep(800, 550);
+
+        gotoxy(52, 12);
+        color(4);
+        cout<< "GAME OVER"<<endl;
+
+        gotoxy(52, 13);
+        color(2);
+        cout<<"Score: "<<score<<endl;
+
+        gotoxy(51, 14);
+        color(3);
+        cout<<"Restart [r]"<<endl;
+    }
+}
+
+int main()
+{
+    char ans, res;
+
+    Setup();
+    gotoxy(45, 13);
+    color(6);
+    cout<< "Enter P for play";
+
+    gotoxy(48, 14);
+    cout<< "W for UP\n";
+
+    gotoxy(47, 15);
+    cout<< "A for LEFT\n";
+
+    gotoxy(47, 16);
+    cout<< "D for Right";
+
+    gotoxy(47, 17);
+    cout<<"S for DOWN\n";
+
+    gotoxy(52, 18);
+    ans = getche();
+    if(ans == 'p')
+    {
+        system("cls");
+        while(!gameOver)
+        {
+            SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), {0, 0});
+            Draw();
+            Input();
+            Logic();
+            Sleep(50);
+        }
+        Gameover();
+    }
+
+    while(true)
+    {
+        gotoxy(55, 15);
+        res = getche();
+        Setup();
+        if(res == 'r')
+        {
+            system("cls");
+            while(!gameOver)
+            {
+                SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), {0, 0});
+                Draw();
+                Input();
+                Logic();
+                Sleep(50);
+            }
+            Gameover();
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    getch();
+}
